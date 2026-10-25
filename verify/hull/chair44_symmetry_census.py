@@ -186,37 +186,32 @@ def scc(nodes, edges):
 
 
 stab_all = {w: frozenset(R for R in frames if act(R, w) == w) for w in language}
-groups = {}
-for w, S in stab_all.items():
-    t = group_type(list(S))
-    if t in ("C2(axis)", "C2(diag)", "C4"):
-        groups.setdefault(S, []).append(w)
+# For a cyclic group K about an axis with direction e, only the rotations about e commute with the axial
+# windows, so the blocks to follow are those whose stabiliser meets the rotations about e in exactly K (their
+# full stabiliser may be larger, e.g. D4 or a Klein group, without the tiling having those symmetries).
+AXES = [(1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, -1, 0), (1, 0, 1), (1, 0, -1), (0, 1, 1), (0, 1, -1)]
 print("\naxial analysis (legal language):")
 result = {}
-for S, ws in groups.items():
-    t = group_type(list(S))
-    gen = [R for R in S if R != ident][0]
-    e = axis_of(gen)[0]
-    if min(e) < 0 and max(e) <= 0:
-        e = tuple(-x for x in e)
-    nodes = set(ws)
-    edges = {}
-    for w in ws:
-        for j in (-1, 0, 1):
-            o = tuple(1 + j * e[k] for k in range(3))
-            if not all(0 <= x <= 2 for x in o):
-                continue
-            u = window(w, o)
-            if u in nodes:
-                edges.setdefault(w, []).append((u, j))
-    comps = [c for c in scc(nodes, edges) if len(c) > 1 or any(u == v for v in c for u, _ in edges.get(v, ()))]
-    mixed = []
-    for c in comps:
-        shifts = {j for v in c for u, j in edges.get(v, ()) if u in c}
-        mixed.append(sorted(shifts))
-    print(f"  {t:10s} axis {e}: {len(ws)} blocks, cyclic SCCs with shift sets {mixed}")
-    result.setdefault(t, False)
-    result[t] |= any(len(s) > 1 for s in mixed)
+for e in AXES:
+    about = frozenset(R for R in frames if m.act(R, e) == e)          # rotations about e, with the identity
+    half = [R for R in about if R != ident and m.act(R, m.act(R, (1, 2, 3))) == (1, 2, 3)][0]
+    for K in sorted({frozenset({ident, half}), about}, key=len):
+        t = group_type(list(K))
+        nodes = {w for w, S in stab_all.items() if S & about == K}
+        edges = {}
+        for w in nodes:
+            for j in (-1, 0, 1):
+                o = tuple(1 + j * e[k] for k in range(3))
+                if not all(0 <= x <= 2 for x in o):
+                    continue
+                u = window(w, o)
+                if u in nodes:
+                    edges.setdefault(w, []).append((u, j))
+        comps = [c for c in scc(nodes, edges) if len(c) > 1 or any(u == v for v in c for u, _ in edges.get(v, ()))]
+        mixed = [sorted({j for v in c for u, j in edges.get(v, ()) if u in c}) for c in comps]
+        print(f"  {t:10s} axis {e}: {len(nodes)} blocks, cyclic SCCs with shift sets {mixed}")
+        result.setdefault(t, False)
+        result[t] |= any(len(sh) > 1 for sh in mixed)
 print("axial groups occurring in the hull:", result)
 
 # ---------------------------------------------------------------- independent check on real patches

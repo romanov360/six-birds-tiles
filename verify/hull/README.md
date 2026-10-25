@@ -35,9 +35,13 @@ Each script ends with `STATUS: PASS` or `FAIL`.
    - No element of order 3: its axis meets a tile interior, and Q has no self-isometry. So Sym(T) ≤ D4.
    - Point groups fix a vertex of every supertile lattice. The blocks there are periodic under the central window, and those blocks are the
      27 fixed seeds, with stabilisers 1 and D4.
-   - Cyclic groups have an axis through vertices of every level. The group K occurs iff the graph of legal blocks with stabiliser K,
-     under axial window shifts, has a strongly connected component using two different shifts. That holds for C2(diag) and C4,
+   - Cyclic groups have an axis, with direction e, through vertices of every level. The group K occurs iff a certain graph has a
+     strongly connected component using two different axial window shifts. The graph's vertices are the legal blocks whose
+     stabiliser meets the rotations about e in exactly K; their full stabiliser may be larger. That holds for C2(diag) and C4,
      but not for C2 about a coordinate axis.
+   - Independent check: Brent Hartshorn's `spectre` repository regenerates the tile and its 44-contact atlas from scratch
+     (`symchair44.py`). From that atlas, `chair44_hull_admissible.py` gets the same 360,189 admissible blocks, and all windows
+     of their substitutions are legal.
 
 Paper draft: T. Romanov, *Every Chair44 tiling is a substitution tiling, and its symmetry groups* (2026). It is
 computer-assisted and unrefereed, and independent checks are welcome.
